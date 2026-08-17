@@ -96,29 +96,50 @@ export function App() {
 
     const initApp = async () => {
       try {
-        const res = await api.getUsers();
+        let res = await api.getUsers();
         if (!isMounted) return;
-        if (res && res.length > 0) {
-          setUsers(res);
-          setCurrentUserId(res[0].id);
-        } else {
-          // If 0 users in fresh database, seed default
+
+        // If fresh database with 0 users, auto-seed default GATE CSE profile
+        if (!res || res.length === 0) {
           try {
-            await api.createPresetProfile('gate_cse');
-            const seeded = await api.getUsers();
-            if (seeded && seeded.length > 0) {
-              setUsers(seeded);
-              setCurrentUserId(seeded[0].id);
-            }
+            await api.createPresetProfile('gate_cse', 'Aarav Sharma (GATE CSE)');
+            res = await api.getUsers();
           } catch (seedErr) {
             console.error('Seed error:', seedErr);
           }
         }
+
+        if (res && res.length > 0) {
+          setUsers(res);
+          const activeId = res[0].id;
+          setCurrentUserId(activeId);
+
+          // Immediately fetch timeline & domain data
+          try {
+            const [tl, fs, hist, podData, coachData] = await Promise.all([
+              api.getTimeline(activeId, selectedDate),
+              api.getFutureSelf(activeId).catch(() => null),
+              api.getActivityHistory(activeId).catch(() => ({ total_events: 0, events: [] })),
+              api.getPod(activeId).catch(() => null),
+              api.getStateOfYou(activeId).catch(() => null),
+            ]);
+            if (isMounted) {
+              setTimeline(tl);
+              setFutureSelf(fs);
+              setActivityEvents(hist ? hist.events : []);
+              setPod(podData);
+              setCoachReport(coachData);
+              setLoading(false);
+            }
+          } catch (fetchErr) {
+            console.error('Data fetch error:', fetchErr);
+          }
+        }
       } catch (err) {
         if (!isMounted) return;
-        if (retries < 6) {
+        if (retries < 10) {
           retries += 1;
-          setTimeout(initApp, 2500);
+          setTimeout(initApp, 2000);
         }
       }
     };
@@ -128,16 +149,18 @@ export function App() {
   }, []);
 
   // Fetch data when currentUserId or selectedDate changes
-  const refreshAllData = async () => {
-    if (!currentUserId) return;
+  const refreshAllData = async (uid?: number, dateStr?: string) => {
+    const targetUid = uid || currentUserId;
+    const targetDate = dateStr || selectedDate;
+    if (!targetUid) return;
     setLoading(true);
     try {
       const [tl, fs, hist, podData, coachData] = await Promise.all([
-        api.getTimeline(currentUserId, selectedDate),
-        api.getFutureSelf(currentUserId).catch(() => null),
-        api.getActivityHistory(currentUserId).catch(() => ({ total_events: 0, events: [] })),
-        api.getPod(currentUserId).catch(() => null),
-        api.getStateOfYou(currentUserId).catch(() => null),
+        api.getTimeline(targetUid, targetDate),
+        api.getFutureSelf(targetUid).catch(() => null),
+        api.getActivityHistory(targetUid).catch(() => ({ total_events: 0, events: [] })),
+        api.getPod(targetUid).catch(() => null),
+        api.getStateOfYou(targetUid).catch(() => null),
       ]);
       setTimeline(tl);
       setFutureSelf(fs);
@@ -153,7 +176,7 @@ export function App() {
 
   useEffect(() => {
     if (currentUserId) {
-      refreshAllData();
+      refreshAllData(currentUserId, selectedDate);
     }
   }, [currentUserId, selectedDate]);
 
@@ -383,13 +406,16 @@ export function App() {
         onClose={() => setShowProfileSwitcherModal(false)}
         users={users}
         currentUserId={currentUserId}
-        onSelectUser={(uid) => {
+        onSelectUser={async (uid) => {
           setCurrentUserId(uid);
+          await refreshUsers();
+          refreshAllData(uid, selectedDate);
           showToast('Switched active profile persona!');
         }}
-        onProfileCreated={(newUid) => {
-          refreshUsers();
+        onProfileCreated={async (newUid) => {
+          await refreshUsers();
           setCurrentUserId(newUid);
+          refreshAllData(newUid, selectedDate);
           showToast('🚀 New student profile active & calibrated!');
         }}
         onOpenCustomOnboarding={() => setCurrentTab('onboarding')}
