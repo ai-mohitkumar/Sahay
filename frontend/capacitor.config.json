@@ -1,0 +1,8 @@
+{
+  "appId": "app.sahay.mobile",
+  "appName": "Sahay",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
