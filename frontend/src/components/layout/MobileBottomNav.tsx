@@ -1,9 +1,9 @@
 import React from 'react';
-import { Calendar, History, MessageSquareHeart, BookOpen, Sparkles } from 'lucide-react';
+import { Home, Calendar, History, MessageSquareHeart, BookOpen, Sparkles } from 'lucide-react';
 
 interface MobileBottomNavProps {
-  currentTab: 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding';
-  setCurrentTab: (tab: 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding') => void;
+  currentTab: 'home' | 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding';
+  setCurrentTab: (tab: 'home' | 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding') => void;
   onOpenProfileSwitcher?: () => void;
 }
 
@@ -16,11 +16,25 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   return (
     <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/90 px-1 py-1 flex items-center justify-around shadow-2xl safe-area-inset-bottom">
+      {/* 0. Home */}
+      <button
+        type="button"
+        onClick={() => setCurrentTab('home')}
+        className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all ${
+          currentTab === 'home'
+            ? 'text-white font-extrabold scale-105'
+            : 'text-slate-400 hover:text-slate-200'
+        }`}
+      >
+        <Home className="w-4 h-4" />
+        <span className="text-[10px] mt-0.5 tracking-tight">Home</span>
+      </button>
+
       {/* 1. 24h Flow */}
       <button
         type="button"
         onClick={() => setCurrentTab('timeline')}
-        className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all ${
+        className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all ${
           currentTab === 'timeline'
             ? 'text-purple-400 font-extrabold scale-105'
             : 'text-slate-400 hover:text-slate-200'

@@ -31,9 +31,10 @@ import { HowSahayThinksModal } from './components/common/HowSahayThinksModal';
 import { EmailSettingsModal } from './components/settings/EmailSettingsModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { AgentPanel } from './components/agent/AgentPanel';
+import { HomeLandingScreen } from './components/home/HomeLandingScreen';
 
 export function App() {
-  const [currentTab, setCurrentTab] = useState<'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding'>('timeline');
+  const [currentTab, setCurrentTab] = useState<'home' | 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding'>('home');
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [currentUserId, setCurrentUserId] = useState<number>(1);
   const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
@@ -276,8 +277,8 @@ export function App() {
         onOpenHowItWorks={() => setShowHowItWorksModal(true)}
       />
 
-      {/* Metric Header (visible on non-onboarding tabs) */}
-      {currentTab !== 'onboarding' && (
+      {/* Metric Header (visible on non-home, non-onboarding tabs) */}
+      {currentTab !== 'onboarding' && currentTab !== 'home' && (
         <MetricHeader
           timeline={timeline}
           futureSelf={futureSelf}
@@ -299,6 +300,27 @@ export function App() {
 
       {/* Main View Router */}
       <main className="flex-1 pb-16 sm:pb-0">
+        {currentTab === 'home' && (
+          <HomeLandingScreen
+            onEnterApp={() => setCurrentTab('timeline')}
+            onSelectPreset={async (presetKey) => {
+              try {
+                const res = await api.createPresetProfile(presetKey);
+                await refreshUsers();
+                setCurrentUserId(res.user_id);
+                refreshAllData(res.user_id, selectedDate);
+                setCurrentTab('timeline');
+                showToast(`🚀 ${presetKey.toUpperCase()} Profile Activated!`);
+              } catch (err: any) {
+                showToast(`Error activating profile: ${err.message}`);
+              }
+            }}
+            onOpenHowItWorks={() => setShowHowItWorksModal(true)}
+            activeUserName={users.find((u) => u.id === currentUserId)?.name}
+            activeExamName={users.find((u) => u.id === currentUserId)?.exam_name || undefined}
+          />
+        )}
+
         {currentTab === 'timeline' && (
           <TimelineView
             timeline={timeline}

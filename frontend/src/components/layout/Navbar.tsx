@@ -1,9 +1,10 @@
-import { Bell, Calendar, TrendingUp, History, UserPlus, BrainCircuit, Users, MessageSquareHeart, BookOpen, Sparkles, Mail } from 'lucide-react';
+import { Bell, Calendar, TrendingUp, History, UserPlus, BrainCircuit, Users, MessageSquareHeart, BookOpen, Sparkles, Mail, Home, Smartphone } from 'lucide-react';
 import { UserSummary } from '../../types';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 interface NavbarProps {
-  currentTab: 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding';
-  setCurrentTab: (tab: 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding') => void;
+  currentTab: 'home' | 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding';
+  setCurrentTab: (tab: 'home' | 'timeline' | 'simulation' | 'history' | 'pods' | 'coach' | 'study' | 'essentials' | 'alarms' | 'onboarding') => void;
   users: UserSummary[];
   currentUserId: number;
   setCurrentUserId?: (id: number) => void;
@@ -21,13 +22,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenEmailSettings,
   onOpenHowItWorks,
 }) => {
+  const { isInstalled, installApp } = usePWAInstall();
+
   return (
     <header className="border-b border-slate-800/80 bg-navy-900/90 backdrop-blur-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         
         {/* Brand */}
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setCurrentTab('timeline')}>
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-900/30">
+        <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => setCurrentTab('home')}>
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-900/30 group-hover:scale-105 transition-transform">
             <BrainCircuit className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -47,6 +50,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Primary Streamlined Nav Tabs */}
         <nav className="flex items-center space-x-1 sm:space-x-2">
+          {/* Home / Landing */}
+          <button
+            onClick={() => setCurrentTab('home')}
+            className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+              currentTab === 'home'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Home</span>
+          </button>
+
           {/* Primary 1: 24h Flow */}
           <button
             onClick={() => setCurrentTab('timeline')}
@@ -70,8 +86,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Activity & Stats</span>
-            <span className="sm:hidden">Stats</span>
+            <span className="hidden md:inline">Activity & Stats</span>
+            <span className="md:hidden">Stats</span>
           </button>
 
           {/* Explore Dropdown for Deep Features */}
@@ -171,7 +187,17 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Unlimited Profile Vault Pill & Switcher */}
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center space-x-2">
+          {/* Install App Button */}
+          <button
+            onClick={installApp}
+            className="flex items-center space-x-1 px-2.5 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 rounded-xl text-xs font-bold transition shadow-sm"
+            title="Install Sahay on Mobile / Desktop"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">{isInstalled ? 'App Ready' : 'Install App'}</span>
+          </button>
+
           {(() => {
             const currentUser = users.find((u) => u.id === currentUserId) || users[0];
             return (
@@ -179,7 +205,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => {
                   if (onOpenProfileSwitcher) onOpenProfileSwitcher();
                 }}
-                className="flex items-center space-x-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-1.5 text-xs transition shadow-sm group"
+                className="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs transition shadow-sm group"
               >
                 <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-[11px] font-black text-white shrink-0">
                   {currentUser ? currentUser.name.charAt(0) : 'U'}
@@ -203,7 +229,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               if (onOpenProfileSwitcher) onOpenProfileSwitcher();
               else setCurrentTab('onboarding');
             }}
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-bold transition-colors"
+            className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-bold transition-colors"
             title="Manage Unlimited Profiles"
           >
             <UserPlus className="w-3.5 h-3.5" />
