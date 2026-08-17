@@ -1,8 +1,8 @@
 services:
-  # FastAPI Backend
+  # FastAPI Backend Web Service
   - type: web
     name: sahay-api
-    env: python
+    runtime: python
     region: oregon
     plan: free
     buildCommand: "cd backend && pip install -r requirements.txt"
@@ -11,11 +11,9 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.8
 
-  # React Frontend (Static Site - Global CDN)
-  - type: web
+  # React Frontend Static Site
+  - type: static
     name: sahay-web
-    env: static
-    plan: free
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: "./frontend/dist"
     routes:
