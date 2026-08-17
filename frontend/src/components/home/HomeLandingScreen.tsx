@@ -125,11 +125,21 @@ export const HomeLandingScreen: React.FC<HomeLandingScreenProps> = ({
               <ArrowRight className="w-4 h-4" />
             </button>
 
+            <a
+              href="https://github.com/ai-mohitkumar/Sahay/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-xl shadow-emerald-600/20 transition-all flex items-center justify-center space-x-2 hover:scale-[1.02] active:scale-95"
+            >
+              <span>📦</span>
+              <span>Download Android APK</span>
+            </a>
+
             <button
               onClick={onOpenHowItWorks}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition flex items-center justify-center space-x-2"
             >
-              <span>📐 How Sahay Thinks (Math)</span>
+              <span>📐 How Sahay Thinks</span>
             </button>
           </div>
 
