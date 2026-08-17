@@ -159,24 +159,34 @@ class ProductivityEngine:
         subject: Optional[Subject],
         exam: Optional[Exam]
     ) -> str:
-        if block.is_fixed:
-            return "Fixed Commitment — Hard non-negotiable class/routine window."
+        title_lower = (block.title or "").lower()
 
-        if block.block_type == "break":
-            return "Circadian Recovery — Restores prefrontal cortex dopamine before evening focus."
+        if block.block_type == "sleep" or "sleep" in title_lower:
+            return "Circadian Anchor — Essential restorative window to prevent tomorrow's focus collapse."
 
-        if block.block_type == "sleep":
-            return "Circadian Sync — Consolidates memory and protects next-day cognitive speed."
+        if block.block_type == "break" or "break" in title_lower or "recharge" in title_lower:
+            return "Prefrontal Reset — 15m dopamine & cognitive rest before the next focus block."
+
+        if "lunch" in title_lower or "dinner" in title_lower or "breakfast" in title_lower or "meal" in title_lower:
+            return "Metabolic Fuel — Timed nutrition buffer to stabilize glucose and mental alertness."
+
+        if block.is_fixed or "college" in title_lower or "class" in title_lower or "lab" in title_lower or "lecture" in title_lower:
+            return "Academic Anchor — Fixed university lecture/lab commitment."
+
+        if "exercise" in title_lower or "gym" in title_lower or "walk" in title_lower:
+            return "Circadian Boost — Physical activity to lower evening cortisol and deepen sleep quality."
 
         if subject:
             weight = subject.weight or 1.0
             ready = subject.readiness_pct or 50.0
-            if ready < 65.0:
-                return f"High Priority — {subject.name} readiness at {ready:.0f}% ({weight:.1f}x exam weight)."
+            if ready < 55.0:
+                return f"High-Yield Gap — {subject.name} readiness is currently {ready:.0f}% ({weight:.1f}x exam weight)."
+            elif ready < 75.0:
+                return f"Active Mastery — Core topic sprint in your peak circadian focus window."
             else:
-                return f"Maintenance Sprint — Keep {subject.name} mastery above 70% pacing."
+                return f"Retention Drill — Quick spaced repetition to keep {subject.name} above 75% pacing."
 
-        return "Scheduled Focus — Optimal energy window aligned with your circadian rhythm."
+        return "Circadian Flow — Optimal energy window tailored to your daily schedule."
 
     @staticmethod
     def log_focus_session(

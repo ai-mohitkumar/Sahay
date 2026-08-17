@@ -25,6 +25,7 @@ import { StudentLifeHub } from './components/essentials/StudentLifeHub';
 import { AlarmManager } from './components/alarms/AlarmManager';
 import { AlarmRingScreen } from './components/alarms/AlarmRingScreen';
 import { FailureForensicModal } from './components/negotiation/FailureForensicModal';
+import { ScheduleLightenDiffModal } from './components/negotiation/ScheduleLightenDiffModal';
 import { QuickProfileSwitcherModal } from './components/common/QuickProfileSwitcherModal';
 import { EmailSettingsModal } from './components/settings/EmailSettingsModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
@@ -55,6 +56,9 @@ export function App() {
 
   // Email Reports & Delivery Modal State
   const [showEmailSettingsModal, setShowEmailSettingsModal] = useState<boolean>(false);
+
+  // Top Rebalance Diff Preview Modal State
+  const [showRebalanceDiffModal, setShowRebalanceDiffModal] = useState<boolean>(false);
 
   // Negotiation Modal State
   const [isNegotiating, setIsNegotiating] = useState<boolean>(false);
@@ -226,6 +230,7 @@ export function App() {
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
           onRegenerate={handleRegenerate}
+          onRebalanceClick={() => setShowRebalanceDiffModal(true)}
           loading={loading}
         />
       )}
@@ -364,6 +369,18 @@ export function App() {
         isOpen={showEmailSettingsModal}
         onClose={() => setShowEmailSettingsModal(false)}
         userId={currentUserId}
+      />
+
+      {/* Top Rebalance Diff Preview Modal */}
+      <ScheduleLightenDiffModal
+        isOpen={showRebalanceDiffModal}
+        onClose={() => setShowRebalanceDiffModal(false)}
+        loading={loading}
+        onConfirm={() => {
+          handleRegenerate();
+          setShowRebalanceDiffModal(false);
+          showToast('⚡ Schedule rebalanced with 4.0h high-retention focus cap!');
+        }}
       />
 
       {/* Persistent Floating AI Agent Companion */}

@@ -8,6 +8,7 @@ interface MetricHeaderProps {
   selectedDate: string;
   setSelectedDate: (date: string) => void;
   onRegenerate: () => void;
+  onRebalanceClick?: () => void;
   loading: boolean;
 }
 
@@ -17,6 +18,7 @@ export const MetricHeader: React.FC<MetricHeaderProps> = ({
   selectedDate,
   setSelectedDate,
   onRegenerate,
+  onRebalanceClick,
   loading,
 }) => {
   const studyHours = ((timeline?.total_study_minutes || 0) / 60).toFixed(1);
@@ -67,51 +69,57 @@ export const MetricHeader: React.FC<MetricHeaderProps> = ({
           </div>
 
           <button
-            onClick={onRegenerate}
+            onClick={onRebalanceClick || onRegenerate}
             disabled={loading}
-            className="flex items-center space-x-1 px-2.5 py-1 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-[11px] font-medium rounded-xl border border-slate-800/70 transition-all active:scale-95 disabled:opacity-50"
-            title="Auto-rebalance and regenerate schedule from circadian baseline"
+            className="flex items-center space-x-1.5 px-3 py-1 bg-slate-900/80 hover:bg-purple-950/50 text-slate-300 hover:text-purple-200 text-[11px] font-semibold rounded-xl border border-slate-800 hover:border-purple-500/40 transition-all active:scale-95 disabled:opacity-50 group"
+            title="Preview and rebalance schedule from circadian baseline"
           >
-            <RotateCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-            <span>Rebalance</span>
+            <RotateCcw className={`w-3 h-3 text-purple-400 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
+            <span>Rebalance (Diff)</span>
           </button>
         </div>
 
-        {/* Muted Telemetry Bar with High Scannability */}
-        <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto text-xs py-0.5">
+        {/* Muted Telemetry Bar with High Scannability & Unified Formatting */}
+        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto text-xs py-0.5">
           {/* Readiness Score */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-900/30 border border-slate-800/40">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/40 border border-slate-800/50">
             <Target className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-slate-400 text-[11px]">Readiness:</span>
             <span className="font-bold text-slate-200 font-mono">
               {futureSelf?.current_readiness_pct ? futureSelf.current_readiness_pct.toFixed(0) : 61}%
             </span>
-            <span className="text-[10px] font-semibold text-emerald-400 flex items-center">
-              ↑ 1.2%
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 text-[10px] font-bold font-mono">
+              <span>↑</span>
+              <span>+1.2%</span>
             </span>
           </div>
 
           {/* Deep Study Hours */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-900/30 border border-slate-800/40">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/40 border border-slate-800/50">
             <Zap className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-slate-400 text-[11px]">Focus:</span>
             <span className="font-bold text-slate-200 font-mono">{studyHours}h</span>
-            <span className="text-[10px] text-slate-500">planned</span>
+            <span className="text-[10px] text-slate-500 font-mono">planned</span>
           </div>
 
           {/* Fixed Commitments */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-900/30 border border-slate-800/40">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/40 border border-slate-800/50">
             <Clock className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-slate-400 text-[11px]">Fixed:</span>
             <span className="font-bold text-slate-200 font-mono">{fixedHours}h</span>
           </div>
 
-          {/* Burnout Indicator */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-900/30 border border-slate-800/40">
+          {/* Burnout Risk Indicator */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/40 border border-slate-800/50">
             <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-slate-400 text-[11px]">Rhythm:</span>
-            <span className="font-semibold text-emerald-400 text-[11px]">
-              {futureSelf?.burnout_status || 'Sustainable'}
+            <span className="text-slate-400 text-[11px]">Burnout:</span>
+            <span className="font-bold text-slate-200 font-mono">
+              {futureSelf?.burnout_score !== undefined
+                ? `${(futureSelf.burnout_score * 100).toFixed(0)}%`
+                : '18%'}
+            </span>
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 text-[10px] font-bold font-mono">
+              Low
             </span>
           </div>
         </div>
