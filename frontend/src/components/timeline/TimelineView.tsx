@@ -39,14 +39,40 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
   if (!timeline || timeline.blocks.length === 0) {
     return (
-      <div className="max-w-md mx-auto py-16 px-4 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mx-auto mb-4 text-indigo-400">
+      <div className="max-w-md mx-auto py-16 px-4 text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mx-auto text-indigo-400 shadow-inner">
           <Calendar className="w-7 h-7" />
         </div>
-        <h3 className="text-lg font-bold text-white">No Schedule for this Date</h3>
-        <p className="text-sm text-slate-400 mt-1">
-          Generate an intelligent circadian plan for this day based on your college and sleep rhythm.
-        </p>
+        <div>
+          <h3 className="text-lg font-bold text-white">No Schedule for this Date</h3>
+          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">
+            Generate an intelligent circadian plan for this day based on your college and sleep rhythm, or load a pre-calibrated student profile:
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <button
+            onClick={async () => {
+              await import('../../api/client').then(m => m.api.createPresetProfile('gate_cse'));
+              if (onRefreshTimeline) onRefreshTimeline();
+            }}
+            className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-purple-600/30 active:scale-95 flex items-center gap-1.5"
+          >
+            <span>🚀</span>
+            <span>Load GATE CSE Profile</span>
+          </button>
+
+          <button
+            onClick={async () => {
+              await import('../../api/client').then(m => m.api.createPresetProfile('cat_mba'));
+              if (onRefreshTimeline) onRefreshTimeline();
+            }}
+            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-xl text-xs font-bold transition border border-slate-700 active:scale-95 flex items-center gap-1.5"
+          >
+            <span>💼</span>
+            <span>Load CAT MBA Profile</span>
+          </button>
+        </div>
       </div>
     );
   }
