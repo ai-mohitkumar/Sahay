@@ -57,3 +57,14 @@ def apply_cross_domain_action(action: str = Query("lighten_schedule"), user_id: 
     Executes proactive cross-domain schedule calibration (e.g. 4h High-Retention Cap, Circadian Stabilization).
     """
     return CrossDomainBrain.apply_synthesis_action(db, user_id, action)
+
+@router.post("/confession")
+def record_confession(payload: Dict[str, Any], user_id: int = Query(1), db: Session = Depends(get_db)):
+    """
+    Confession Mode: Records honest weekly self-awareness without judgment and auto-adjusts next week's schedule.
+    """
+    tag = payload.get("tag", "overplanning")
+    confession_text = payload.get("confession_text", "")
+    if not confession_text.strip():
+        raise HTTPException(status_code=400, detail="Confession text cannot be empty")
+    return CrossDomainBrain.record_confession(db, user_id, tag, confession_text)

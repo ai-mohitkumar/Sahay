@@ -488,3 +488,59 @@ class CrossDomainBrain:
             }
 
         return {"status": "noop", "message": f"Action '{action}' processed."}
+
+    @classmethod
+    def record_confession(cls, db: Session, user_id: int, tag: str, confession_text: str) -> Dict[str, Any]:
+        """
+        Confession Mode: Compassionate weekly self-awareness logger.
+        Zero judgment acknowledgment that adjusts next week's baseline realistically.
+        """
+        # 1. Map tag to human insight
+        tag_insights = {
+            "overplanning": "Over-planning creates morning optimism and evening guilt. Recognizing it is the first step.",
+            "unrealistic_wakeup": "Forcing 5:30 AM wakeups after sleeping late sets up an afternoon focus crash.",
+            "break_doomscroll": "Short dopamine traps in breaks are natural when cognitive friction is high.",
+            "avoiding_hard_topic": "Procrastinating on high-friction topics usually means the starting hurdle is too high."
+        }
+
+        ack_prefix = tag_insights.get(tag, "Logged with zero judgment. Self-awareness is what separates lasting consistency from burnout.")
+
+        # 2. Generate adjusted plan action
+        adjusted_summary = "Softened next week's heavy post-college slots to 45m micro-sprints."
+        if tag == "unrealistic_wakeup":
+            adjusted_summary = "Pushed wake anchor 45m later to ensure a 7.0h biological sleep floor."
+        elif tag == "avoiding_hard_topic":
+            adjusted_summary = "Added 15m formula warmup scans before hard problem sets to lower activation energy."
+
+        # 3. Create or update LongitudinalMemory
+        memory = db.query(LongitudinalMemory).filter(
+            LongitudinalMemory.user_id == user_id,
+            LongitudinalMemory.category == "self_confession"
+        ).first()
+
+        if not memory:
+            memory = LongitudinalMemory(
+                user_id=user_id,
+                category="self_confession",
+                observed_pattern=f"Student noted self-friction: '{confession_text[:120]}'",
+                first_observed_date=date.today(),
+                last_observed_date=date.today(),
+                occurrence_count=1,
+                ai_callback_prompt=f"Acknowledge student's honest self-awareness: {confession_text[:80]}",
+                confidence_pct=95,
+                is_active=True
+            )
+            db.add(memory)
+        else:
+            memory.occurrence_count += 1
+            memory.last_observed_date = date.today()
+            memory.observed_pattern = f"Student noted self-friction: '{confession_text[:120]}'"
+
+        db.commit()
+
+        return {
+            "status": "success",
+            "acknowledgment": f"{ack_prefix} I've noted: \"{confession_text}\"",
+            "adjusted_plan_summary": adjusted_summary,
+            "longitudinal_memory_saved": True
+        }

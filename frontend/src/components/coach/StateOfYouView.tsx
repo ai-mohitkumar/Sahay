@@ -13,6 +13,7 @@ import {
 import { StateOfYouReport } from '../../types';
 import { LongitudinalMemoryHub } from './LongitudinalMemoryHub';
 import { ShareableStoryCardModal } from '../common/ShareableStoryCardModal';
+import { ConfessionCard } from './ConfessionCard';
 
 interface StateOfYouViewProps {
   report: StateOfYouReport | null;
@@ -160,6 +161,9 @@ export const StateOfYouView: React.FC<StateOfYouViewProps> = ({ report, loading,
           </p>
         </div>
       </div>
+
+      {/* Confession Mode: Weekly Self-Awareness Logger */}
+      <ConfessionCard userId={userId} />
 
       {/* Moat Pillar 2 & 4: Compounding Longitudinal Memory & Failure Forensics Breakdown */}
       <LongitudinalMemoryHub userId={userId} />

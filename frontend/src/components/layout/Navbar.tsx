@@ -9,6 +9,7 @@ interface NavbarProps {
   setCurrentUserId?: (id: number) => void;
   onOpenProfileSwitcher?: () => void;
   onOpenEmailSettings?: () => void;
+  onOpenHowItWorks?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUserId,
   onOpenProfileSwitcher,
   onOpenEmailSettings,
+  onOpenHowItWorks,
 }) => {
   return (
     <header className="border-b border-slate-800/80 bg-navy-900/90 backdrop-blur-md sticky top-0 z-40">
@@ -153,6 +155,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Mail className="w-3.5 h-3.5 text-purple-400" />
                 <span>Email Reports & Digests</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (onOpenHowItWorks) onOpenHowItWorks();
+                }}
+                className="w-full flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold text-left text-emerald-300 hover:bg-emerald-950/50 hover:text-white transition"
+              >
+                <BrainCircuit className="w-3.5 h-3.5 text-emerald-400" />
+                <span>How Sahay Thinks (Math)</span>
               </button>
             </div>
           </div>

@@ -27,6 +27,7 @@ import { AlarmRingScreen } from './components/alarms/AlarmRingScreen';
 import { FailureForensicModal } from './components/negotiation/FailureForensicModal';
 import { ScheduleLightenDiffModal } from './components/negotiation/ScheduleLightenDiffModal';
 import { QuickProfileSwitcherModal } from './components/common/QuickProfileSwitcherModal';
+import { HowSahayThinksModal } from './components/common/HowSahayThinksModal';
 import { EmailSettingsModal } from './components/settings/EmailSettingsModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { AgentPanel } from './components/agent/AgentPanel';
@@ -59,6 +60,9 @@ export function App() {
 
   // Top Rebalance Diff Preview Modal State
   const [showRebalanceDiffModal, setShowRebalanceDiffModal] = useState<boolean>(false);
+
+  // How Sahay Thinks Open Methodology Modal State
+  const [showHowItWorksModal, setShowHowItWorksModal] = useState<boolean>(false);
 
   // Negotiation Modal State
   const [isNegotiating, setIsNegotiating] = useState<boolean>(false);
@@ -220,6 +224,7 @@ export function App() {
         setCurrentUserId={setCurrentUserId}
         onOpenProfileSwitcher={() => setShowProfileSwitcherModal(true)}
         onOpenEmailSettings={() => setShowEmailSettingsModal(true)}
+        onOpenHowItWorks={() => setShowHowItWorksModal(true)}
       />
 
       {/* Metric Header (visible on non-onboarding tabs) */}
@@ -381,6 +386,12 @@ export function App() {
           setShowRebalanceDiffModal(false);
           showToast('⚡ Schedule rebalanced with 4.0h high-retention focus cap!');
         }}
+      />
+
+      {/* How Sahay Thinks Open Methodology Modal */}
+      <HowSahayThinksModal
+        isOpen={showHowItWorksModal}
+        onClose={() => setShowHowItWorksModal(false)}
       />
 
       {/* Persistent Floating AI Agent Companion */}

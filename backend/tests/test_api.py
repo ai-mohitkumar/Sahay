@@ -591,6 +591,18 @@ def test_document_parser_and_ingestion():
     assert ingest_syl.json()["status"] == "success"
     assert ingest_syl.json()["entity_type"] == "subject_and_tasks"
 
+def test_confession_mode_and_longitudinal_memory():
+    res = client.post("/api/v1/cross-domain/confession?user_id=1", json={
+        "tag": "overplanning",
+        "confession_text": "I scheduled 4 hours of Algorithms on Thursday knowing I had college labs until 5 PM."
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert "acknowledgment" in data
+    assert "adjusted_plan_summary" in data
+    assert data["longitudinal_memory_saved"] is True
+
 
 
 

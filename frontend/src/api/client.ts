@@ -341,5 +341,12 @@ export const api = {
 
   getDocumentSampleTemplates: () =>
     fetchApi<{ admit_card: string; fee_receipt: string; syllabus: string }>('/documents/sample-templates'),
+
+  // Confession Mode
+  recordConfession: (userId: number, tag: string, confessionText: string) =>
+    fetchApi<{ status: string; acknowledgment: string; adjusted_plan_summary: string; longitudinal_memory_saved: boolean }>(`/cross-domain/confession?user_id=${userId}`, {
+      method: 'POST',
+      body: JSON.stringify({ tag, confession_text: confessionText }),
+    }),
 };
 

@@ -85,3 +85,14 @@ class LongitudinalMemoryOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ConfessionCreate(BaseModel):
+    user_id: int
+    tag: str = "overplanning" # 'overplanning', 'unrealistic_wakeup', 'break_doomscroll', 'avoiding_hard_topic', 'other'
+    confession_text: str
+
+class ConfessionResponse(BaseModel):
+    status: str
+    acknowledgment: str
+    adjusted_plan_summary: str
+    longitudinal_memory_saved: bool
