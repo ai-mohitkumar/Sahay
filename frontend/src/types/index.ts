@@ -501,4 +501,54 @@ export interface TestEmailSendResponse {
   sent_at: string;
 }
 
+export interface ParsedAdmitCard {
+  exam_name: string;
+  target_date: string;
+  registration_number?: string;
+  center_city?: string;
+  shift_time?: string;
+  confidence_pct: number;
+}
+
+export interface ParsedFeeReceipt {
+  title: string;
+  amount: number;
+  category: string;
+  transaction_id?: string;
+  payment_method: string;
+  date: string;
+  confidence_pct: number;
+}
+
+export interface SyllabusModuleItem {
+  title: string;
+  estimated_hours: number;
+  priority: number;
+  difficulty: string;
+}
+
+export interface ParsedSyllabus {
+  subject_name: string;
+  total_estimated_hours: number;
+  color_code: string;
+  modules: SyllabusModuleItem[];
+  confidence_pct: number;
+}
+
+export interface DocumentParseResponse {
+  doc_type: 'admit_card' | 'fee_receipt' | 'syllabus';
+  summary: string;
+  admit_card?: ParsedAdmitCard;
+  fee_receipt?: ParsedFeeReceipt;
+  syllabus?: ParsedSyllabus;
+}
+
+export interface DocumentIngestResponse {
+  status: string;
+  message: string;
+  entity_type: string;
+  created_id: number;
+  details: Record<string, any>;
+}
+
 

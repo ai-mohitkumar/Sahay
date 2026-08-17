@@ -27,6 +27,7 @@ import { AlarmRingScreen } from './components/alarms/AlarmRingScreen';
 import { FailureForensicModal } from './components/negotiation/FailureForensicModal';
 import { QuickProfileSwitcherModal } from './components/common/QuickProfileSwitcherModal';
 import { EmailSettingsModal } from './components/settings/EmailSettingsModal';
+import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { AgentPanel } from './components/agent/AgentPanel';
 
 export function App() {
@@ -238,7 +239,7 @@ export function App() {
       )}
 
       {/* Main View Router */}
-      <main className="flex-1">
+      <main className="flex-1 pb-16 sm:pb-0">
         {currentTab === 'timeline' && (
           <TimelineView
             timeline={timeline}
@@ -367,6 +368,13 @@ export function App() {
 
       {/* Persistent Floating AI Agent Companion */}
       <AgentPanel userId={currentUserId} />
+
+      {/* Mobile-Native Bottom Navigation Bar */}
+      <MobileBottomNav
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        onOpenProfileSwitcher={() => setShowProfileSwitcherModal(true)}
+      />
     </div>
   );
 }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="128" fill="#090d16"/>
+  <circle cx="256" cy="256" r="200" fill="url(#grad)" opacity="0.15"/>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 120 C180 120 120 180 120 256 C120 332 180 392 256 392 C332 392 392 332 392 256 C392 180 332 120 256 120 Z" fill="none" stroke="url(#grad)" stroke-width="24" stroke-dasharray="16 8"/>
+  <circle cx="256" cy="256" r="64" fill="url(#grad)"/>
+  <text x="256" y="276" font-family="-apple-system, sans-serif" font-size="56" font-weight="900" fill="#ffffff" text-anchor="middle">S</text>
+</svg>

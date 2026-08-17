@@ -1,6 +1,8 @@
-import { FileText, CheckCircle2, Shield, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { FileText, CheckCircle2, Shield, Check, Upload } from 'lucide-react';
 import { StudentDocument, StudentRoutine } from '../../types';
 import { api } from '../../api/client';
+import { DocumentUploadModal } from './DocumentUploadModal';
 
 interface LifeAdminVaultProps {
   documents: StudentDocument[];
@@ -15,6 +17,8 @@ export const LifeAdminVault: React.FC<LifeAdminVaultProps> = ({
   userId,
   onRefresh,
 }) => {
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+
   const handleToggleRoutine = async (id: number) => {
     try {
       await api.toggleRoutine(id, userId);
@@ -28,14 +32,23 @@ export const LifeAdminVault: React.FC<LifeAdminVaultProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* 1. Document Vault */}
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
-            <FileText className="w-4 h-4" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold text-white">Document Vault & Ingestion</h4>
+              <p className="text-[11px] text-slate-400">Admit cards, fee receipts, syllabus sheets</p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-sm font-extrabold text-white">Document Vault & Expiry</h4>
-            <p className="text-[11px] text-slate-400">Admit cards, fee receipts, student IDs</p>
-          </div>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 rounded-xl text-xs font-bold transition shadow-sm"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Upload & Extract</span>
+          </button>
         </div>
 
         <div className="space-y-3">
@@ -122,6 +135,14 @@ export const LifeAdminVault: React.FC<LifeAdminVaultProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Inbound Document & Receipt Upload Modal */}
+      <DocumentUploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        userId={userId}
+        onIngested={() => onRefresh()}
+      />
     </div>
   );
 };

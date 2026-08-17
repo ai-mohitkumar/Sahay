@@ -520,6 +520,78 @@ def test_email_engine_preferences_and_delivery():
     assert "daily_digest" in email_types
     assert "auth_otp" in email_types
 
+def test_document_parser_and_ingestion():
+    # 1. Fetch sample document templates
+    tmpl_res = client.get("/api/v1/documents/sample-templates")
+    assert tmpl_res.status_code == 200
+    templates = tmpl_res.json()
+    assert "admit_card" in templates
+    assert "fee_receipt" in templates
+    assert "syllabus" in templates
+
+    # 2. Parse GATE admit card
+    admit_parse = client.post("/api/v1/documents/parse", json={
+        "user_id": 1,
+        "doc_type": "auto",
+        "raw_text": templates["admit_card"]
+    })
+    assert admit_parse.status_code == 200
+    p_data = admit_parse.json()
+    assert p_data["doc_type"] == "admit_card"
+    assert p_data["admit_card"]["exam_name"] == "GATE CSE 2027"
+    assert "2027" in p_data["admit_card"]["target_date"]
+
+    # 3. Ingest admit card into database
+    ingest_admit = client.post("/api/v1/documents/ingest", json={
+        "user_id": 1,
+        "doc_type": "admit_card",
+        "payload": p_data["admit_card"]
+    })
+    assert ingest_admit.status_code == 200
+    assert ingest_admit.json()["status"] == "success"
+    assert ingest_admit.json()["entity_type"] == "exam"
+
+    # 4. Parse & Ingest Fee Receipt
+    fee_parse = client.post("/api/v1/documents/parse", json={
+        "user_id": 1,
+        "doc_type": "auto",
+        "raw_text": templates["fee_receipt"]
+    })
+    assert fee_parse.status_code == 200
+    f_data = fee_parse.json()
+    assert f_data["doc_type"] == "fee_receipt"
+    assert f_data["fee_receipt"]["amount"] == 22500.0
+
+    ingest_fee = client.post("/api/v1/documents/ingest", json={
+        "user_id": 1,
+        "doc_type": "fee_receipt",
+        "payload": f_data["fee_receipt"]
+    })
+    assert ingest_fee.status_code == 200
+    assert ingest_fee.json()["status"] == "success"
+    assert ingest_fee.json()["entity_type"] == "student_expense"
+
+    # 5. Parse & Ingest Syllabus
+    syl_parse = client.post("/api/v1/documents/parse", json={
+        "user_id": 1,
+        "doc_type": "auto",
+        "raw_text": templates["syllabus"]
+    })
+    assert syl_parse.status_code == 200
+    s_data = syl_parse.json()
+    assert s_data["doc_type"] == "syllabus"
+    assert len(s_data["syllabus"]["modules"]) >= 3
+
+    ingest_syl = client.post("/api/v1/documents/ingest", json={
+        "user_id": 1,
+        "doc_type": "syllabus",
+        "payload": s_data["syllabus"]
+    })
+    assert ingest_syl.status_code == 200
+    assert ingest_syl.json()["status"] == "success"
+    assert ingest_syl.json()["entity_type"] == "subject_and_tasks"
+
+
 
 
 

@@ -317,5 +317,29 @@ export const api = {
 
   getEmailLogs: (userId: number) =>
     fetchApi<import('../types').EmailLog[]>(`/email/logs?user_id=${userId}`),
+
+  // Inbound Document & Receipt Capture
+  parseDocument: (userId: number, rawText: string, docType: string = 'auto') =>
+    fetchApi<import('../types').DocumentParseResponse>('/documents/parse', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        raw_text: rawText,
+        doc_type: docType,
+      }),
+    }),
+
+  ingestDocument: (userId: number, docType: string, payload: Record<string, any>) =>
+    fetchApi<import('../types').DocumentIngestResponse>('/documents/ingest', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        doc_type: docType,
+        payload,
+      }),
+    }),
+
+  getDocumentSampleTemplates: () =>
+    fetchApi<{ admit_card: string; fee_receipt: string; syllabus: string }>('/documents/sample-templates'),
 };
 

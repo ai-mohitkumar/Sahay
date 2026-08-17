@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import onboarding, schedules, tasks, negotiation, simulation, analytics, pods, study, student_life, agent, alarms, cross_domain, email
+from app.api.routes import onboarding, schedules, tasks, negotiation, simulation, analytics, pods, study, student_life, agent, alarms, cross_domain, email, document_parser
 
 api_router = APIRouter()
 
@@ -16,4 +16,5 @@ api_router.include_router(agent.router)
 api_router.include_router(alarms.router)
 api_router.include_router(cross_domain.router)
 api_router.include_router(email.router)
+api_router.include_router(document_parser.router)
 
