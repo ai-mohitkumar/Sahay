@@ -12,7 +12,8 @@ const API_BASE =
   (import.meta.env.PROD ? 'https://sahay-api.onrender.com/api/v1' : '/api/v1');
 
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${endpoint}`, {
+  const url = `${API_BASE}${endpoint}`;
+  const res = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
@@ -20,12 +21,21 @@ export async function fetchApi<T>(endpoint: string, options?: RequestInit): Prom
     ...options,
   });
 
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => ({}));
-    throw new Error(errorBody.detail || `Request failed with status ${res.status}`);
+  const text = await res.text();
+  let data: any = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (e) {
+    if (!res.ok) {
+      throw new Error(`Server returned HTTP ${res.status}: ${text.slice(0, 120)}`);
+    }
   }
 
-  return res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || `Request failed with status ${res.status}`);
+  }
+
+  return data as T;
 }
 
 export const api = {
