@@ -78,7 +78,7 @@ export function App() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Load initial users
+  // Load initial users with auto-retry during backend cold starts
   const refreshUsers = async () => {
     try {
       const res = await api.getUsers();
@@ -91,16 +91,40 @@ export function App() {
   };
 
   useEffect(() => {
-    api.getUsers().then((res) => {
-      if (res && res.length > 0) {
-        setUsers(res);
-        setCurrentUserId(res[0].id);
-      } else {
-        setCurrentTab('onboarding');
+    let isMounted = true;
+    let retries = 0;
+
+    const initApp = async () => {
+      try {
+        const res = await api.getUsers();
+        if (!isMounted) return;
+        if (res && res.length > 0) {
+          setUsers(res);
+          setCurrentUserId(res[0].id);
+        } else {
+          // If 0 users in fresh database, seed default
+          try {
+            await api.createPresetProfile('gate_cse');
+            const seeded = await api.getUsers();
+            if (seeded && seeded.length > 0) {
+              setUsers(seeded);
+              setCurrentUserId(seeded[0].id);
+            }
+          } catch (seedErr) {
+            console.error('Seed error:', seedErr);
+          }
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        if (retries < 6) {
+          retries += 1;
+          setTimeout(initApp, 2500);
+        }
       }
-    }).catch(() => {
-      // Backend warming up
-    });
+    };
+
+    initApp();
+    return () => { isMounted = false; };
   }, []);
 
   // Fetch data when currentUserId or selectedDate changes
@@ -117,7 +141,7 @@ export function App() {
       ]);
       setTimeline(tl);
       setFutureSelf(fs);
-      setActivityEvents(hist.events);
+      setActivityEvents(hist ? hist.events : []);
       setPod(podData);
       setCoachReport(coachData);
     } catch (err) {
@@ -128,7 +152,9 @@ export function App() {
   };
 
   useEffect(() => {
-    refreshAllData();
+    if (currentUserId) {
+      refreshAllData();
+    }
   }, [currentUserId, selectedDate]);
 
   // Handle Mark Done (Step 5)
