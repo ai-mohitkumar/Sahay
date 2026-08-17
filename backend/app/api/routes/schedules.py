@@ -59,7 +59,9 @@ def get_timeline(
                     subj_color = subj_obj.color_code
                     exam_obj = db.query(Exam).filter(Exam.id == subj_obj.exam_id).first() if subj_obj.exam_id else None
 
-        dur = time_to_minutes(b.end_time) - time_to_minutes(b.start_time)
+        start_m = time_to_minutes(b.start_time)
+        end_m = time_to_minutes(b.end_time)
+        dur = (end_m - start_m) if end_m >= start_m else (end_m + 24 * 60 - start_m)
         if b.block_type == "study_session":
             total_study_mins += dur
         elif b.block_type in ["fixed_commitment", "sleep"]:
