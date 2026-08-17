@@ -11,9 +11,10 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.8
 
-  # React Frontend Static Site
-  - type: static
+  # React Frontend (Static Site on Global CDN)
+  - type: web
     name: sahay-web
+    runtime: static
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: "./frontend/dist"
     routes:
