@@ -98,20 +98,20 @@ export const HomeLandingScreen: React.FC<HomeLandingScreenProps> = ({
 
         {/* Hero Section */}
         <div className="text-center space-y-4 pt-4">
-          <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-semibold">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-semibold shadow-inner">
             <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
-            <span>The AI that negotiates your day with you — not just schedules it.</span>
+            <span>The Reality Recovery Engine • Not another static calendar</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white max-w-2xl mx-auto leading-tight">
-            Stop abandoning plans.{' '}
-            <span className="bg-gradient-to-r from-purple-400 via-indigo-300 to-blue-400 bg-clip-text text-transparent">
-              Start negotiating them.
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-tight">
+            Google Calendar tells you what’s scheduled.{' '}
+            <span className="bg-gradient-to-r from-purple-400 via-indigo-300 to-emerald-400 bg-clip-text text-transparent">
+              Sahay tells you what to do when reality breaks it.
             </span>
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto leading-relaxed">
-            Sahay unites your circadian sleep rhythms, exam runway, college load, and daily energy into a calm, realistic 24-hour flow.
+          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            When college over-runs, low energy hits, or deadlines shift, Sahay doesn't let you abandon your day. It actively bargains trade-offs, protects your sleep floor, and keeps your exam runway intact.
           </p>
 
           {/* Main Action Buttons */}
