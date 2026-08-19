@@ -20,6 +20,7 @@ from app.models.study_content import Topic, Question, Material
 from app.models.student_life import StudentBudget, Opportunity, StudentDocument
 from app.models.agent import AgentConversation, AgentMessage
 from app.services.scheduler_engine import time_to_minutes
+from app.services.knowledge_engine import KnowledgeEngine
 
 class AIAgentOrchestrator:
     """
@@ -299,20 +300,13 @@ class AIAgentOrchestrator:
                 reply = f"🌍 The capital of **{c_name.title()}** is **{cap_city}**.\n\n• **Context**: {fact}"
                 return {"reply": reply, "suggestions": ["Ask another geography question", "Check my study schedule", "Start focus session"], "source": "General Geography Knowledge"}
 
-        # 4. Live Web Search Grounding for all other queries (e.g. CM of Bihar, Sports, Live News, Companies)
+        # 4. Live Web Search Grounding for all other queries
         web_res = cls.search_web_grounding(query)
         if web_res:
             return web_res
 
-        # 5. Clean Fallback for Open-Ended Queries
-        clean_term = query.replace("what is", "").replace("who is", "").replace("tell me about", "").replace("explain", "").strip(" ?.")
-        reply = (
-            f"Here is a direct overview for **'{query.strip()}'**:\n\n"
-            f"• **Topic**: {clean_term.title() or query}\n"
-            f"• **Summary**: Key concept or entity in its field.\n"
-            f"• **Guidance**: Feel free to ask a specific follow-up question or explore related topics."
-        )
-        return {"reply": reply, "suggestions": ["Tell me more", "How does this relate to my goals?", "Ask another question"], "source": "General Knowledge (AI Agent)"}
+        # 5. Dynamic Omni-Domain Knowledge Retrieval & Synthesis
+        return KnowledgeEngine.answer_open_ended_question(query)
 
     @classmethod
     def handle_study_doubt(cls, query: str, ctx: Dict[str, Any], socratic_mode: bool) -> Dict[str, Any]:
