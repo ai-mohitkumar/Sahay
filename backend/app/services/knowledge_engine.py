@@ -2,23 +2,62 @@ import os
 import re
 import urllib.parse
 import httpx
+import ast
+import operator
+from datetime import datetime
 from typing import Dict, Any, Optional, List
 
 class KnowledgeEngine:
     """
-    Dynamic Omni-Domain Knowledge & Question Answering Engine.
-    Provides deep, factual, and customized answers for any query across:
-    - Computer Science, Programming & Algorithms
-    - Mathematics, Physics, Chemistry & Engineering
-    - UPSC, History, Geography, Polity & Economics
-    - CAT, Quantitative Aptitude & Logical Reasoning
-    - General Knowledge, Science, Figures & Everyday Facts
+    Dynamic Omni-Domain Knowledge, Real-time Clock, Math & Question Answering Engine.
     """
+
+    @classmethod
+    def evaluate_math_expression(cls, expr_str: str) -> Optional[str]:
+        """Safely evaluates basic math expressions like '25 * 40', '100 / 4', '2 ** 8'."""
+        try:
+            cleaned = re.sub(r"[^\d\+\-\*\/\%\(\)\.\^\s]", "", expr_str.replace("^", "**")).strip()
+            if not cleaned or not any(op in cleaned for op in ["+", "-", "*", "/", "%", "**"]):
+                return None
+            
+            # Safe AST evaluation
+            allowed_operators = {
+                ast.Add: operator.add,
+                ast.Sub: operator.sub,
+                ast.Mult: operator.mul,
+                ast.Div: operator.truediv,
+                ast.FloorDiv: operator.floordiv,
+                ast.Mod: operator.mod,
+                ast.Pow: operator.pow,
+                ast.USub: operator.neg,
+                ast.UAdd: operator.pos
+            }
+
+            def eval_node(node):
+                if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+                    return node.value
+                elif isinstance(node, ast.BinOp):
+                    op_type = type(node.op)
+                    if op_type in allowed_operators:
+                        return allowed_operators[op_type](eval_node(node.left), eval_node(node.right))
+                elif isinstance(node, ast.UnaryOp):
+                    op_type = type(node.op)
+                    if op_type in allowed_operators:
+                        return allowed_operators[op_type](eval_node(node.operand))
+                raise ValueError("Unsupported operation")
+
+            parsed = ast.parse(cleaned, mode='eval')
+            result = eval_node(parsed.body)
+            if isinstance(result, float) and result.is_integer():
+                result = int(result)
+            return f"🔢 **Calculation Result:**\n\n$$\\mathbf{{{cleaned}}} = \\mathbf{{{result:,}}}$$"
+        except Exception:
+            return None
 
     @classmethod
     def call_llm(cls, prompt: str, system_prompt: str = "") -> Optional[str]:
         """Calls Gemini or OpenAI LLM API if key is present in environment."""
-        # 1. Google Gemini API (Generative Language API)
+        # 1. Google Gemini API
         gemini_key = os.getenv("GEMINI_API_KEY")
         if gemini_key:
             try:
@@ -72,7 +111,6 @@ class KnowledgeEngine:
     def fetch_wikipedia_summary(cls, query: str) -> Optional[Dict[str, Any]]:
         """Fetches direct, verified encyclopedic extract from Wikipedia REST API."""
         try:
-            # Clean query prefixes
             cleaned = re.sub(
                 r"^(what is (the )?|who is (the )?|tell me about (the )?|explain (the )?|how does |where is (the )?|define (the )?|what are (the )?)",
                 "",
@@ -86,7 +124,6 @@ class KnowledgeEngine:
                 for term in search_terms:
                     if not term:
                         continue
-                    # 1. Direct page summary attempt
                     encoded = urllib.parse.quote(term.replace(" ", "_"))
                     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{encoded}"
                     r = client.get(url, headers={"User-Agent": "SahayAI/1.0 (educational student assistant)"})
@@ -101,7 +138,7 @@ class KnowledgeEngine:
                                 "url": data.get("content_urls", {}).get("desktop", {}).get("page", "")
                             }
 
-                    # 2. Search API to find best matching article title
+                    # Search API
                     search_url = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={urllib.parse.quote(term)}&limit=3&namespace=0&format=json"
                     sr = client.get(search_url, headers={"User-Agent": "SahayAI/1.0 (educational student assistant)"})
                     if sr.status_code == 200:
@@ -112,7 +149,7 @@ class KnowledgeEngine:
                             r2 = client.get(f"https://en.wikipedia.org/api/rest_v1/page/summary/{best_encoded}", headers={"User-Agent": "SahayAI/1.0"})
                             if r2.status_code == 200:
                                 d2 = r2.json()
-                                if d2.get("extract"):
+                                if d2.get("extract") and len(d2.get("extract")) > 40:
                                     return {
                                         "title": d2.get("title"),
                                         "summary": d2.get("extract"),
@@ -124,23 +161,29 @@ class KnowledgeEngine:
         return None
 
     @classmethod
-    def fetch_duckduckgo_instant(cls, query: str) -> Optional[Dict[str, Any]]:
-        """Fetches DuckDuckGo Instant Answer API for quick definitions."""
+    def fetch_dictionary_definition(cls, word: str) -> Optional[str]:
+        """Looks up dictionary definition for single words or terms."""
+        clean_word = re.sub(r"[^\w]", "", word.lower().strip())
+        if not clean_word or len(clean_word) < 2:
+            return None
         try:
-            with httpx.Client(timeout=5.0) as client:
-                url = f"https://api.duckduckgo.com/?q={urllib.parse.quote(query)}&format=json&no_redirect=1&no_html=1"
-                r = client.get(url)
+            with httpx.Client(timeout=4.0) as client:
+                r = client.get(f"https://api.dictionaryapi.dev/api/v2/entries/en/{clean_word}")
                 if r.status_code == 200:
                     data = r.json()
-                    abstract = data.get("AbstractText")
-                    heading = data.get("Heading")
-                    if abstract and len(abstract) > 30:
-                        return {"title": heading or query, "summary": abstract}
-                    
-                    # Check related topics
-                    related = data.get("RelatedTopics", [])
-                    if related and isinstance(related[0], dict) and related[0].get("Text"):
-                        return {"title": heading or query, "summary": related[0].get("Text")}
+                    if isinstance(data, list) and data:
+                        entry = data[0]
+                        meanings = entry.get("meanings", [])
+                        if meanings:
+                            part_of_speech = meanings[0].get("partOfSpeech", "noun")
+                            defs = meanings[0].get("definitions", [])
+                            if defs:
+                                d_text = defs[0].get("definition", "")
+                                example = defs[0].get("example", "")
+                                reply = f"📖 **{clean_word.title()}** *({part_of_speech})*\n\n• **Definition**: {d_text}"
+                                if example:
+                                    reply += f"\n• **Example**: \"{example}\""
+                                return reply
         except Exception:
             pass
         return None
@@ -148,16 +191,22 @@ class KnowledgeEngine:
     @classmethod
     def answer_open_ended_question(cls, query: str, user_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Synthesizes a complete, accurate, tailored answer for ANY query.
-        1. Checks real LLM if configured.
-        2. Queries live encyclopedic knowledge databases.
-        3. Generates rich pedagogical breakdown with follow-up suggestions.
+        Synthesizes a complete, natural, accurate answer for ANY query.
         """
-        # Step 1: Real LLM if available
+        # 1. Math calculation check
+        math_res = cls.evaluate_math_expression(query)
+        if math_res:
+            return {
+                "reply": math_res,
+                "suggestions": ["Solve another equation", "Show my study schedule", "Start focus session"],
+                "source": "Math Calculation Engine"
+            }
+
+        # 2. Real LLM if available
         llm_reply = cls.call_llm(
             prompt=query,
             system_prompt=(
-                "You are Sahay, an extraordinarily smart, compassionate, and precise academic AI copilot and cognitive negotiator. "
+                "You are Sahay, an extraordinarily smart, friendly, compassionate academic AI copilot and cognitive negotiator. "
                 "Answer the student's question directly, clearly, with crystal-clear formatting, examples, bullet points, and equations if relevant."
             )
         )
@@ -168,20 +217,17 @@ class KnowledgeEngine:
                 "source": "Sahay AI Intelligence Engine"
             }
 
-        # Step 2: Live Wikipedia Knowledge Retrieval
+        # 3. Live Wikipedia Knowledge Retrieval
         wiki = cls.fetch_wikipedia_summary(query)
         if wiki:
             title = wiki["title"]
             summary = wiki["summary"]
-            
-            # Format high-clarity structured response
             reply = (
                 f"🧠 **{title}**\n\n"
                 f"{summary}\n\n"
-                f"💡 **Key Takeaways & Core Concepts:**\n"
+                f"💡 **Key Context & Core Concepts:**\n"
                 f"• **Domain**: High-yield subject in science, technology & academics.\n"
-                f"• **Application**: Essential for conceptual clarity, problem solving, and analytical reasoning.\n"
-                f"• **Deep Dive**: Would you like a worked example, numerical drill, or exam application?"
+                f"• **Application**: Essential for conceptual clarity and analytical reasoning."
             )
             return {
                 "reply": reply,
@@ -189,38 +235,28 @@ class KnowledgeEngine:
                 "source": f"Verified Academic Grounding ({title})"
             }
 
-        # Step 3: DuckDuckGo Instant Answer
-        ddg = cls.fetch_duckduckgo_instant(query)
-        if ddg:
-            title = ddg["title"]
-            summary = ddg["summary"]
-            reply = (
-                f"💡 **{title}**\n\n"
-                f"{summary}\n\n"
-                f"Feel free to ask a specific follow-up question or explore numerical problems on this topic."
-            )
-            return {
-                "reply": reply,
-                "suggestions": ["Tell me more", "Give a real-world example", "Ask another question"],
-                "source": "Global Knowledge Base"
-            }
+        # 4. Single-word Dictionary Definition
+        words = query.strip().split()
+        if len(words) <= 3:
+            term = words[-1]
+            dict_res = cls.fetch_dictionary_definition(term)
+            if dict_res:
+                return {
+                    "reply": dict_res,
+                    "suggestions": ["Ask another word definition", "Show my study schedule", "Start focus timer"],
+                    "source": "English Lexicon & Dictionary"
+                }
 
-        # Step 4: Intelligent Synthesizer Fallback
-        cleaned = re.sub(r"^(what is|who is|explain|tell me about|how to|why does|how does)\s+", "", query, flags=re.IGNORECASE).strip(" ?.")
+        # 5. Friendly Natural Fallback (No robotic template)
+        clean_term = re.sub(r"^(what is|who is|explain|tell me about|how to|why does|how does)\s+", "", query, flags=re.IGNORECASE).strip(" ?.")
         reply = (
-            f"🔍 **Comprehensive Breakdown: {cleaned.title()}**\n\n"
-            f"### 1. Conceptual Definition\n"
-            f"**{cleaned.title()}** is a foundational concept. When analyzing this topic:\n"
-            f"• Break down the governing principles step-by-step.\n"
-            f"• Identify boundary conditions and core dependencies.\n"
-            f"• Apply standard definitions before calculating final results.\n\n"
-            f"### 2. Analytical Checklist\n"
-            f"1. **Input States**: What variables and constraints are provided?\n"
-            f"2. **Transformation Rule**: What mechanism or formula governs the transition?\n"
-            f"3. **Verification**: Does the outcome satisfy fundamental conservation and consistency rules?"
+            f"Here is a direct breakdown for **{clean_term.title() or query}**:\n\n"
+            f"• **Overview**: '{clean_term}' is an important concept in its domain.\n"
+            f"• **How to Approach**: When studying this topic, start with core definitions, note the key governing rules, and test your understanding with practical examples.\n\n"
+            f"Would you like me to find specific practice questions or connect this to your current study runway?"
         )
         return {
             "reply": reply,
-            "suggestions": [f"Give an example of {cleaned}", f"Key formulas for {cleaned}", "Ask another topic"],
-            "source": "Analytical Knowledge Model"
+            "suggestions": [f"Explain {clean_term} simply", f"Practice questions on {clean_term}", "Check my schedule"],
+            "source": "Sahay Knowledge Synthesizer"
         }

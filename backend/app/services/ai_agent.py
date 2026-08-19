@@ -82,47 +82,73 @@ class AIAgentOrchestrator:
     @classmethod
     def classify_intent(cls, query: str) -> str:
         q = query.strip().lower()
+        # Normalize common student typos
+        q = re.sub(r"\bwaht\b|\bwhaat\b|\bwhta\b", "what", q)
+        q = re.sub(r"\bpleas\b|\bplz\b", "please", q)
+        q = re.sub(r"\bthx\b|\bthanx\b", "thanks", q)
 
-        # 1. Identity / About the AI
+        # 1. Clock Time & Live Calendar Date
+        if any(w in q for w in [
+            "what is time", "what time is it", "what's the time", "time now",
+            "current time", "what date", "today's date", "today date", "which day is today",
+            "what day is it", "date today", "tell me time", "clock"
+        ]):
+            return "clock_time"
+
+        # 2. Mathematical Calculations
+        if (
+            re.match(r"^[\d\s\+\-\*\/\%\(\)\.\^\=]+$", q) or
+            ("calculate" in q or "what is" in q or "evaluate" in q) and any(op in q for op in ["+", "-", "*", "/", "%", "^", "**"]) and any(c.isdigit() for c in q)
+        ):
+            return "calculation"
+
+        # 3. Identity / About the AI
         if any(phrase in q for phrase in [
             "who are you", "what is your name", "what's your name", "who made you",
             "what can you do", "introduce yourself", "tell me about yourself", "your name"
         ]):
             return "identity"
 
-        # 2. Greetings & Casual Check-ins
-        if q in ["hi", "hey", "hello", "hola", "namaste", "sup", "yo", "good morning", "good evening", "good afternoon"]:
+        # 4. Casual Conversation, Humor & Gratitude
+        if any(phrase in q for phrase in [
+            "how are you", "how r u", "tell me a joke", "make me laugh", "i am bored",
+            "thank you", "thanks", "good morning", "good night", "good afternoon", "bye", "see you"
+        ]):
+            return "casual_conversation"
+
+        # 5. Greetings & Casual Check-ins
+        if q in ["hi", "hey", "hello", "hola", "namaste", "sup", "yo"]:
             return "greeting"
 
-        # 3. Schedule / Calendar questions
+        # 6. Schedule / Calendar questions
         if any(w in q for w in [
             "free time", "my schedule", "what is next", "when is my", "what do i have today",
             "timeline", "study hours today", "what's due today", "my calendar", "how much time do i have"
         ]):
             return "schedule_planning"
 
-        # 4. Trade-offs / skips / postponements / life balance
+        # 7. Trade-offs / skips / postponements / life balance
         if any(w in q for w in [
             "should i skip", "should i delay", "can i afford to postpone", "reschedule",
             "skip gym", "tradeoff", "trade-off", "is it okay if i", "can i take a break"
         ]):
             return "tradeoff_negotiation"
 
-        # 5. Emotional / Stress / Anxiety
+        # 8. Emotional / Stress / Anxiety
         if any(w in q for w in [
             "stressed", "anxious", "overwhelmed", "panic", "falling behind", "burnout",
             "scared of exam", "losing motivation", "exhausted", "depressed", "give up", "i feel low"
         ]):
             return "emotional_support"
 
-        # 6. Life-Admin / Money / Documents / Routine
+        # 9. Life-Admin / Money / Documents / Routine
         if any(w in q for w in [
             "budget", "allowance", "safe spend", "upi", "how much can i spend",
             "admit card", "fee receipt", "internship", "gsoc", "hackathon", "laundry", "document vault"
         ]):
             return "life_admin"
 
-        # 7. Study Doubts / Syllabus / Concepts
+        # 10. Study Doubts / Syllabus / Concepts
         if any(w in q for w in [
             "semaphore", "paging", "scheduling", "deadlock", "tlb", "process sync",
             "formula", "pyq", "doubt", "explain how", "why does", "dijkstra", "quicksort",
@@ -131,7 +157,7 @@ class AIAgentOrchestrator:
         ]):
             return "study_doubt"
 
-        # 8. Everything else -> General Knowledge
+        # 11. Everything else -> General Knowledge
         return "general_knowledge"
 
     @classmethod
@@ -508,9 +534,94 @@ class AIAgentOrchestrator:
         suggestions = []
 
         # -------------------------------------------------------------
+        # 0. Clock Time & Live Calendar Date
+        # -------------------------------------------------------------
+        if intent == "clock_time":
+            grounding = "Live System Clock & Calendar"
+            now = datetime.now()
+            time_str = now.strftime("%I:%M %p")
+            date_str = now.strftime("%A, %B %d, %Y")
+            
+            # Find currently active block
+            now_mins = now.hour * 60 + now.minute
+            blocks = ctx.get("today_blocks", [])
+            current_block = None
+            for b in blocks:
+                # time format: '09:00 - 14:00'
+                parts = b["time"].split(" - ")
+                if len(parts) == 2:
+                    st_m = time_to_minutes(parts[0])
+                    end_m = time_to_minutes(parts[1])
+                    if st_m <= now_mins <= end_m:
+                        current_block = b
+                        break
+
+            active_info = f"• **Current Ongoing Activity**: **{current_block['title']}** ({current_block['time']})" if current_block else "• **Status**: You have free buffer / self-study time right now."
+
+            reply = (
+                f"🕒 **Current Time & Date:**\n\n"
+                f"• **Time**: **{time_str}**\n"
+                f"• **Date**: **{date_str}**\n"
+                f"{active_info}\n\n"
+                f"Want to start a focus sprint or check what's next on your timeline?"
+            )
+            suggestions = ["What is my next study block?", "Start 25m Focus Sprint", "Show today's timeline"]
+
+        # -------------------------------------------------------------
+        # 0.1 Math Calculation
+        # -------------------------------------------------------------
+        elif intent == "calculation":
+            grounding = "Math Calculation Engine"
+            math_ans = KnowledgeEngine.evaluate_math_expression(query)
+            if math_ans:
+                reply = math_ans
+            else:
+                reply = f"Could not parse a direct arithmetic expression from '{query}'. Try format like '25 * 40' or '100 / 4'."
+            suggestions = ["Calculate another formula", "Show my study schedule", "Ask a CS doubt"]
+
+        # -------------------------------------------------------------
+        # 0.2 Casual Conversation & Humor
+        # -------------------------------------------------------------
+        elif intent == "casual_conversation":
+            grounding = "Sahay AI Persona"
+            q_lower = query.lower()
+            if "joke" in q_lower or "laugh" in q_lower:
+                reply = (
+                    "😄 Here is a classic for you:\n\n"
+                    "**Why do programmers prefer dark mode?**\n"
+                    "*Because light attracts bugs!* 🐛\n\n"
+                    "Ready to squash some bugs in your study prep?"
+                )
+                suggestions = ["Tell another joke", "Explain Deadlock in OS", "Start 25m Focus Sprint"]
+            elif "thank" in q_lower or "thx" in q_lower:
+                reply = (
+                    "You're very welcome! 🙌 Always here to help you protect your sleep, stay consistent, and crush your goals. What's on your mind next?"
+                )
+                suggestions = ["Check my schedule", "Explain a doubt", "Take a short break"]
+            elif "bored" in q_lower:
+                reply = (
+                    "Boredom is usually your brain's sneaky way of saying *'I need a micro-win'*! 🎯\n\n"
+                    "Let's break the monotony:\n"
+                    "1. Do a **5-question rapid drill** on your strongest subject.\n"
+                    "2. Take a **3-minute stretch + water walk**.\n"
+                    "3. Switch to a video lecture for 15 minutes."
+                )
+                suggestions = ["Start 5m Quick Drill", "Do 2-min Box Breathing", "Show my progress graph"]
+            elif "how are you" in q_lower or "how r u" in q_lower:
+                name = ctx.get("user_name", "there")
+                reply = (
+                    f"I'm operating at peak efficiency and ready to help you navigate your day, {name}! ⚡ "
+                    f"How is your energy level feeling right now?"
+                )
+                suggestions = ["Feeling good, let's study", "Feeling tired after college", "Check my timeline"]
+            else:
+                reply = "Always here with you! What would you like to explore or organize right now?"
+                suggestions = ["What's my schedule today?", "Ask a study doubt", "Check my wallet balance"]
+
+        # -------------------------------------------------------------
         # 1. Identity
         # -------------------------------------------------------------
-        if intent == "identity":
+        elif intent == "identity":
             grounding = "Sahay System Identity"
             reply = (
                 "👋 I'm **Sahay**, your personal AI copilot & thinking partner!\n\n"
